@@ -3,29 +3,28 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>音声カタカナ記録ロガー</title>
+    <title>音声カタカナロガー</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-gray-50 text-gray-800 font-sans pb-12">
     <div class="max-w-md mx-auto p-4 flex flex-col min-h-screen">
         <header class="mb-4 text-center">
             <h1 class="text-2xl font-bold text-blue-700">音声カタカナロガー</h1>
-            <p class="text-xs text-gray-500 mt-1">すべての入力を自動でカタカナ変換＆タイムスタンプ記録</p>
+            <p class="text-xs text-gray-500 mt-1">タイムスタンプ付き記録＆CSV出力</p>
         </header>
 
         <!-- 入力パネル -->
         <div class="bg-white rounded-2xl shadow p-4 mb-4">
-            <label for="wordInput" class="block text-sm text-gray-600 mb-2">下の枠をタップしてキーボードのマイクで入力</label>
+            <label for="wordInput" class="block text-sm text-gray-600 mb-2">言葉を入力・または音声入力</label>
             
             <div class="flex gap-2">
                 <input type="text" id="wordInput" placeholder="例: セグロセキレイ" 
                     class="flex-1 border border-gray-300 rounded-xl px-4 py-3 text-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
                 
-                <button type="button" onclick="addRecordFromInput()" class="bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-bold px-5 py-3 rounded-xl shadow transition">
+                <button type="button" onclick="addRecord()" class="bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-bold px-5 py-3 rounded-xl shadow transition">
                     追加
                 </button>
             </div>
-            <p class="text-xs text-gray-400 mt-2">※どんな言葉でも自動で全角カタカナに変換されます</p>
         </div>
 
         <!-- 記録管理・出力ボタン -->
@@ -48,30 +47,37 @@
     </div>
 
     <script>
+        // データの読み込み
         let records = [];
         try {
-            const saved = localStorage.getItem('universal_katakana_records');
-            if (saved) records = JSON.parse(saved);
+            const saved = localStorage.getItem('katakana_logger_records');
+            if (saved) {
+                records = JSON.parse(saved);
+            }
         } catch (e) {
             records = [];
         }
 
         const inputElement = document.getElementById('wordInput');
 
-        function addRecordFromInput() {
+        // Enterキーでも追加できるようにする
+        inputElement.addEventListener('keydown', function (e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                addRecord();
+            }
+        });
+
+        function addRecord() {
             const rawText = inputElement.value.trim();
             if (!rawText) return;
 
-            // 入力された言葉をすべて全角カタカナに変換
+            // ひらがなや混ざった文字をすべて全角カタカナに変換
             const katakanaName = convertToKatakana(rawText);
             
+            // 現在時刻の作成
             const now = new Date();
             const timeString = now.getFullYear() + '/' +
                 String(now.getMonth() + 1).padStart(2, '0') + '/' +
                 String(now.getDate()).padStart(2, '0') + ' ' +
                 String(now.getHours()).padStart(2, '0') + ':' +
-                String(now.getMinutes()).padStart(2, '0') + ':' +
-                String(now.getSeconds()).padStart(2, '0');
-
-            records.push({ id: Date.now(), name: katakanaName, time: timeString });
-            save
